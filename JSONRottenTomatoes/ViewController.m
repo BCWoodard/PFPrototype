@@ -33,6 +33,15 @@
 
 }
 
+- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    if (motion == UIEventSubtypeMotionShake) {
+        NSLog(@"Did shake");
+    }
+}
+
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
 
 - (void)didReceiveMemoryWarning
 {
