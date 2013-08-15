@@ -8,12 +8,17 @@
 
 #import "ViewController.h"
 #import "Movie.h"
+#import "RottenTomatoesConnection.h"
 
-@interface ViewController ()
-{
-    NSArray                     *moviesArray;
-    NSArray                     *moviePostersArray;
-    __weak IBOutlet UITableView *moviesTable;
+@interface ViewController () {
+    BOOL                                arrayIsReady;
+    NSString                            *randomMovieTitle;
+    NSArray                             *moviesArray;
+    NSArray                             *moviePostersArray;
+    NSMutableArray                      *shakeArray;
+    NSMutableArray                      *randomMovieSelectedArray;
+    RottenTomatoesConnection            *rottenTomatoesConnection;
+    __weak IBOutlet UITableView         *moviesTable;
 }
 
 @end
@@ -22,20 +27,38 @@
 
 - (void)viewDidLoad
 {
+    //the : for onMoviesInfo says it expects a parameter which is the notication and contains the userInfo..and userInfo contains the arrays
+    
+    rottenTomatoesConnection = [RottenTomatoesConnection new];
+    
     [[NSNotificationCenter defaultCenter]
      addObserver:self
-     selector:@selector(getMovieGenre)
-     name:@"MoviesArray"
+     selector:@selector(onMoviesInfo:)
+     name:@"MoviesInfo"
      object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMovieGenre:) name:@"MovieGenre" object:nil];
     
     [super viewDidLoad];
     [self getRottenTomatoesDATA];
-
+    randomMovieSelectedArray = [[NSMutableArray alloc] initWithCapacity:1];
 }
 
 - (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
-    if (motion == UIEventSubtypeMotionShake) {
-        NSLog(@"Did shake");
+    if (arrayIsReady == YES) {
+        if (motion == UIEventSubtypeMotionShake) {
+            if (shakeArray.count != 1) {
+                [randomMovieSelectedArray removeAllObjects];
+                int index = arc4random() % shakeArray.count;
+                randomMovieTitle = [NSString stringWithFormat:@"%@", [[shakeArray objectAtIndex:index] movieTitle]];
+                [randomMovieSelectedArray addObject:[shakeArray objectAtIndex:index]];
+                [shakeArray removeObjectAtIndex:index];
+                NSLog(@"Random Movie: %@", [[randomMovieSelectedArray objectAtIndex:0] movieTitle]);
+                NSLog(@"Remaining Movies: %@", shakeArray);
+            } else {
+                NSLog(@"Random Movie: %@", [[randomMovieSelectedArray objectAtIndex:0] movieTitle]);
+            }
+        }
     }
 }
 
@@ -71,9 +94,15 @@
     // Grab movie object and poster thumbnail from their respective arrays
     Movie *movie = [moviesArray objectAtIndex:indexPath.row];
     UIImage *moviePosterThumbnail = [moviePostersArray objectAtIndex:indexPath.row];
-
+    
     cell.textLabel.text = movie.movieTitle;
-    cell.detailTextLabel.text = [NSString stringWithFormat:@"%@. Genre: %@. Peer Rating: %@", movie.movieMPAA, movie.movieGenre, movie.moviePeerRating];
+    if (movie.movieGenre == nil) {
+        cell.detailTextLabel.text = [NSString stringWithFormat:@"%@. Genre: Loading... Peer Rating: %@", movie.movieMPAA, movie.moviePeerRating];
+        
+    } else {
+        cell.detailTextLabel.text = [NSString stringWithFormat:@"%@. Genre: %@. Peer Rating: %@", movie.movieMPAA, movie.movieGenre, movie.moviePeerRating];
+    }
+    
     cell.imageView.image = moviePosterThumbnail;
     
     return cell;
@@ -81,73 +110,21 @@
 
 - (void)getRottenTomatoesDATA
 {
-    // Activate the Network Activity Indicator
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
-    
-    NSURL *url = [NSURL URLWithString:@"http://api.rottentomatoes.com/api/public/v1.0/lists/movies/in_theaters.json?page_limit=16&page=1&country=us&apikey=xx88qet7sppj6r7jp7wrnznd"];
-    NSURLRequest *request = [NSURLRequest requestWithURL:url];
-    
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
-        
-        // Retrieve all the Rotten Tomatoes movie data
-        NSDictionary *rottenTomatoesJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-        
-        // Create an array of movie data and 2 temp arrays -
-        // One to hold movie objects - tempArray
-        // One to hold poster images - tempPostersArray
-        NSArray *dataMovieArray = [rottenTomatoesJSON objectForKey:@"movies"];
-        NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:[dataMovieArray count]];
-        NSMutableArray *tempPostersArray = [NSMutableArray arrayWithCapacity:[dataMovieArray count]];
-
-        for (NSDictionary *dictionary in dataMovieArray) {
-            // Create a movie using our init override method in Movie.m
-            Movie *movie = [[Movie alloc] initWithMovieDictionary:dictionary];
-            NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:movie.movieListImageURL]];
-            UIImage *moviePosterThumbnail = [UIImage imageWithData:data];
-            [tempPostersArray addObject:moviePosterThumbnail];
-            [tempArray addObject:movie];
-        }
-        
-        // Populate our NSArrays with temporary mutable arrays
-        // Again, we do this to protect our arrays from accidental edits, etc.
-        moviePostersArray = [NSArray arrayWithArray:tempPostersArray];
-        moviesArray = [NSArray arrayWithArray:tempArray];
-        
-        // Send notification that our download is complete
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesArray" object:nil];
-        
-        // Stop NetworkActivityIndicator
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-
-    }];
+    [rottenTomatoesConnection getMovieInfo];
 }
 
 
-- (void)getMovieGenre
+- (void)onMoviesInfo:(NSNotification *)note
 {
-    // Activate the Network Activity Indicator
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    moviesArray = note.userInfo[@"movies"];
+    moviePostersArray = note.userInfo[@"moviePosters"];
+    [rottenTomatoesConnection performSelectorInBackground:@selector(getMovieGenres:) withObject:moviesArray];
+    shakeArray = [[NSMutableArray alloc] initWithArray:moviesArray];
+    arrayIsReady = YES;
+}
 
-    // Get the ID for each movie object and retrieve the first genre entry
-    // for each film from Movie Info JSON
-    for (Movie *movie in moviesArray) {
-        NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://api.rottentomatoes.com/api/public/v1.0/movies/%@.json?apikey=xx88qet7sppj6r7jp7wrnznd", movie.movieID]];
-        NSURLRequest *request = [NSURLRequest requestWithURL:url];
-        [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
-                        
-            // Access the movie info dictionary on Rotten Tomatoes and set the
-            // movie genre to the first element in the "genres" array
-            NSDictionary *movieInfoDictionary = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-            NSArray *movieGenresArray = [movieInfoDictionary objectForKey:@"genres"];
-            movie.movieGenre = [movieGenresArray objectAtIndex:0];
-            
-            // Stop the Network Activity Indicator
-            [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-            
-            [moviesTable reloadData];
-            
-        }];
-    }
+- (void)onMovieGenre:(NSNotification *)note {
+    [moviesTable reloadData];
 }
 
 @end

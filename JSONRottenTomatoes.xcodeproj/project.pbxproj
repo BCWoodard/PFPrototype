@@ -19,6 +19,7 @@
 		4A272E7F17AD82070067621F /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A272E7D17AD82070067621F /* MainStoryboard.storyboard */; };
 		4A272E8217AD82070067621F /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A272E8117AD82070067621F /* ViewController.m */; };
 		4A6B6EBF17BADA1500AC4488 /* Movie.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A6B6EBE17BADA1500AC4488 /* Movie.m */; };
+		CF893DAB17BBF373008CDC76 /* RottenTomatoesConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = CF893DAA17BBF373008CDC76 /* RottenTomatoesConnection.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,8 @@
 		4A272E8117AD82070067621F /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		4A6B6EBD17BADA1500AC4488 /* Movie.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Movie.h; sourceTree = "<group>"; };
 		4A6B6EBE17BADA1500AC4488 /* Movie.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Movie.m; sourceTree = "<group>"; };
+		CF893DA917BBF373008CDC76 /* RottenTomatoesConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RottenTomatoesConnection.h; sourceTree = "<group>"; };
+		CF893DAA17BBF373008CDC76 /* RottenTomatoesConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RottenTomatoesConnection.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +94,8 @@
 				4A272E7D17AD82070067621F /* MainStoryboard.storyboard */,
 				4A272E8017AD82070067621F /* ViewController.h */,
 				4A272E8117AD82070067621F /* ViewController.m */,
+				CF893DA917BBF373008CDC76 /* RottenTomatoesConnection.h */,
+				CF893DAA17BBF373008CDC76 /* RottenTomatoesConnection.m */,
 				4A6B6EBD17BADA1500AC4488 /* Movie.h */,
 				4A6B6EBE17BADA1500AC4488 /* Movie.m */,
 				4A272E6C17AD82060067621F /* Supporting Files */,
@@ -182,6 +187,7 @@
 				4A272E7617AD82060067621F /* AppDelegate.m in Sources */,
 				4A272E8217AD82070067621F /* ViewController.m in Sources */,
 				4A6B6EBF17BADA1500AC4488 /* Movie.m in Sources */,
+				CF893DAB17BBF373008CDC76 /* RottenTomatoesConnection.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
